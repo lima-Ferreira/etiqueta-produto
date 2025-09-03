@@ -12,14 +12,13 @@
             margin: 0;
             padding: 0;
             height: 100vh;
-            /* altura total da tela */
         }
 
         header {
             background: purple;
             color: white;
             text-align: center;
-            padding: 15px;
+            padding: 12px 0 6px 0;
             font-size: 20px;
             font-weight: bold;
             letter-spacing: 2px;
@@ -27,37 +26,44 @@
 
         main {
             max-width: 700px;
-            margin: 20px auto;
+            margin: 10px auto;
             background: #fff;
-            padding: 20px;
+            padding: 15px;
             border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            overflow: auto;
-            /* permite rolagem só dentro do form, se necessário */
         }
 
         label {
             display: block;
-            margin-top: 10px;
+            margin-top: 8px;
             font-weight: bold;
             color: purple;
         }
 
         input,
-        textarea {
+        select {
             width: 100%;
-            padding: 8px;
-            margin-top: 5px;
+            padding: 6px;
+            margin-top: 3px;
             border: 1px solid #ccc;
             border-radius: 6px;
+            font-size: 14px;
         }
 
-        textarea {
-            resize: none;
+        .linha {
+            display: flex;
+        }
+
+        .linha div {
+            flex: 1;
+        }
+
+        .linha div+div {
+            margin-left: 10px;
         }
 
         .buttons {
-            margin-top: 20px;
+            margin-top: 15px;
             display: flex;
             justify-content: space-between;
         }
@@ -65,8 +71,8 @@
         button {
             flex: 1;
             margin: 5px;
-            padding: 10px;
-            font-size: 16px;
+            padding: 8px;
+            font-size: 14px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
@@ -99,51 +105,95 @@
         <form id="etiquetaForm">
             <label>Nome: <input type="text" name="nome"></label>
 
-            <div style="display: flex; gap: 20px; align-items: flex-start;">
-                <label style="flex: 4;">Endereço: <input type="text" name="endereco"></label>
-                <div style=" flex: 1; display: flex; flex-direction: column;">
-                    <label>Número:</label>
-                    <input type="text" name="numero" style="width: 100%;">
-                </div>
+            <div class="linha">
+                <div><label>Endereço:</label><input type="text" name="endereco"></div>
+                <div><label>Número:</label><input type="text" name="numero"></div>
             </div>
-
 
             <label>Bairro: <input type="text" name="bairro"></label>
             <label>Telefone: <input type="text" name="telefone"></label>
             <label>Produtos: <input type="text" name="produtos"></label>
 
-            <label>Número da Venda: <input type="text" name="venda"></label>
-            <label>Número da Nota: <input type="text" name="nota"></label>
-            <label>Número de Série: <input type="text" name="serie"></label>
-            <label>Número da OS: <input type="text" name="os da loja"></label>
-            <label>Ordem de Serviços: <input type="text" name="ordem de Serviços"></label>
+            <div class="linha">
+                <div><label>Número da Venda:</label><input type="text" name="venda"></div>
+                <div><label>Número da Nota:</label><input type="text" name="nota"></div>
+            </div>
+
+            <div class="linha">
+                <div><label>Número de Série:</label><input type="text" name="serie"></div>
+                <div><label>Número da OS:</label><input type="text" name="osdaLoja"></div>
+            </div>
+
+            <label>Ordem de Serviços: <input type="text" name="ordemServicos"></label>
+
+            <div class="linha">
+                <div>
+                    <label>Loja de Origem:</label>
+                    <select name="lojaOrigem">
+                        <option value="">SELECIONAR LOJA DE ORIGEM</option>
+                        <option>J O DE LIMA LTDA - MATRIZ</option>
+                        <option>J O DE LIMA LTDA - PALHANO</option>
+                        <option>J O DE LIMA LTDA - JAGUARUANA</option>
+                        <option>J O DE LIMA LTDA - DEPOSITO</option>
+                        <option>J O DE LIMA LTDA - LOJA 05</option>
+                        <option>J O DE LIMA LTDA - LIMOEIRO</option>
+                        <option>J O DE LIMA LTDA - ITAIÇABA</option>
+                        <option>J O DE LIMA LTDA - FLORES</option>
+                        <option>J O DE LIMA LTDA - ARACATI</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Autorizada:</label>
+                    <select name="autorizada">
+                        <option value="">SELECIONAR AUTORIZADA</option>
+                        <option>AUTORIZADA - LIVERTEC</option>
+                        <option>AUTORIZADA - ELETRONICA GAUDENCIO</option>
+                        <option>AUTORIZADA - ELECTROLUX LIMOEIRO</option>
+                        <option>AUTORIZADA - ELETRO REFRIGERAÇAO LIMOEIRENSE</option>
+                        <option>AUTORIZADA - WALBER</option>
+                        <option>AUTORIZADA - OUTROS</option>
+                    </select>
+                </div>
+            </div>
             <label>Defeito: <input type="text" name="defeito"></label>
+
+            <label>Data: <input type="text" name="dataAtual" readonly></label>
 
             <div class="buttons">
                 <button type="button" class="save" onclick="salvarGerarPDF()">Salvar & Gerar PDF</button>
                 <button type="button" class="clear" onclick="limparFormulario()">Limpar Formulário</button>
             </div>
         </form>
-
     </main>
 
     <script>
         const form = document.getElementById("etiquetaForm");
 
-        // Carregar dados do localStorage
         window.onload = () => {
             const dados = JSON.parse(localStorage.getItem("etiqueta")) || {};
             Object.keys(dados).forEach(campo => {
-                form.elements[campo].value = dados[campo];
+                if (form.elements[campo]) form.elements[campo].value = dados[campo];
             });
+            if (!form.elements.dataAtual.value)
+                form.elements.dataAtual.value = new Date().toLocaleDateString('pt-BR');
         };
 
-
         function salvarGerarPDF() {
-            const dados = {};
-            for (let el of form.elements) {
-                if (el.name) dados[el.name] = el.value;
+            // Validação: não gerar PDF se algum input estiver vazio
+            const inputs = Array.from(form.elements).filter(el => el.name);
+            for (let input of inputs) {
+                if (!input.value.trim()) {
+                    alert(`O campo "${input.name}" está vazio. Preencha todos os campos antes de gerar o PDF.`);
+                    input.focus();
+                    return; // interrompe execução
+                }
             }
+
+            const dados = {};
+            for (let el of inputs) {
+                dados[el.name] = el.value;
+            }
+
             localStorage.setItem("etiqueta", JSON.stringify(dados));
 
             const { jsPDF } = window.jspdf;
@@ -153,42 +203,53 @@
             const pageWidth = doc.internal.pageSize.getWidth();
 
             // Header
-            let y = 3; // pequena margem superior
-            const headerText = "ETIQUETA DE IDENTIFICAÇÃO";
+            let y = 3;
             doc.setFont("helvetica", "bold");
             doc.setFontSize(14);
             doc.setTextColor(0, 0, 0);
-            doc.text(headerText.toUpperCase(), pageWidth / 2, y + 5, { align: "center" });
-            y += 12; // margem abaixo do header
+            doc.text("ETIQUETA DE IDENTIFICAÇÃO", pageWidth / 2, y + 5, { align: "center" });
+
+            // Selects e Data centralizados abaixo do header
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(8);
+            y += 8;
+            const infoHeader = [
+                `LOJA DE ORIGEM: ${dados.lojaOrigem.toUpperCase()}`,
+                `AUTORIZADA: ${dados.autorizada.toUpperCase()}`,
+                `DATA: ${dados.dataAtual.toUpperCase()}`
+            ];
+            infoHeader.forEach((text, i) => {
+                doc.text(text, pageWidth / 2, y + i * 4, { align: "center" });
+            });
+            y += infoHeader.length * 4 + 2;
 
             const padding = 3;
-            const lineHeight = 3.2; // altura de linha menor
+            const lineHeight = 3.2;
             const contentX = margin;
             let contentY = y;
             const contentWidth = pageWidth - 2 * margin - 2 * padding;
 
-            // Preparar linhas e calcular altura do conteúdo
+            // Linhas do conteúdo
             const linhas = [];
+            const ordemCampos = ["nome", "endereco", "numero", "bairro", "telefone", "produtos",
+                "venda", "nota", "serie", "osdaLoja", "ordemServicos", "defeito"
+            ];
             let contentHeight = 0;
-            for (let campo in dados) {
+            for (let campo of ordemCampos) {
                 let label = campo.toUpperCase() + ": ";
                 let value = dados[campo].toUpperCase();
-                linhas.push({ campo: campo.toLowerCase(), label, value });
+                linhas.push({ label, value });
                 contentHeight += lineHeight + 1.5;
             }
-
-            contentHeight += 0; // espaço extra no final para borda respirar
 
             // Borda principal
             doc.setDrawColor(50, 50, 50);
             doc.setLineWidth(0.5);
             doc.rect(contentX, contentY, contentWidth + 2 * padding, contentHeight + 2 * padding);
 
-            // Inserir texto
+            // Inserir texto dentro da borda
             let textY = contentY + padding + 2;
-            for (let i = 0; i < linhas.length; i++) {
-                const { label, value } = linhas[i];
-
+            for (let { label, value } of linhas) {
                 doc.setFont("helvetica", "bold");
                 doc.setFontSize(8);
                 doc.text(label, contentX + padding, textY);
@@ -201,8 +262,8 @@
                 textY += Math.max(splitText.length, 1) * lineHeight + 1.5;
             }
 
-            // Linha pontilhada + tesoura (mais afastada da borda)
-            const corteY = contentY + contentHeight + padding + 6;
+            // Linha pontilhada com tesoura
+            const corteY = contentY + contentHeight + padding + 5;
             doc.setLineWidth(0.1);
             doc.setDrawColor(0, 0, 0);
             const dashLength = 2;
@@ -217,11 +278,10 @@
             alert("Dados salvos e PDF gerado!");
         }
 
-
-
         function limparFormulario() {
             localStorage.removeItem("etiqueta");
             form.reset();
+            form.elements.dataAtual.value = new Date().toLocaleDateString('pt-BR');
             alert("Formulário limpo!");
         }
     </script>
