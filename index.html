@@ -200,41 +200,36 @@
 
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
             const pageWidth = doc.internal.pageSize.getWidth();
+            let y = 1;
 
-            // Variáveis de espaçamento do header
-            const headerSpacingTop = 5;       // distância do topo da página até o título
-            const headerToInfoSpacing = 6;    // distância entre título e informações
-            const lineSpacing = 5;            // distância entre linhas do infoHeader
-
-            let y = 3;  // ponto inicial
-
-            // Header
+            // Header centralizado
             doc.setFont("helvetica", "bold");
             doc.setFontSize(14);
-            doc.text("ETIQUETA DE IDENTIFICAÇÃO", pageWidth / 2, y + headerSpacingTop, { align: "center" });
+            doc.text("ETIQUETA DE IDENTIFICAÇÃO", pageWidth / 2, y + 3, { align: "center" });
 
+            // Informações da loja e data
             doc.setFont("helvetica", "normal");
             doc.setFontSize(8);
-            y += headerToInfoSpacing;
-
+            y += 8;
             const infoHeader = [
                 `LOJA DE ORIGEM: ${dados.lojaOrigem.toUpperCase()}`,
                 `AUTORIZADA: ${dados.autorizada.toUpperCase()}`,
                 `DATA: ${dados.dataAtual.toUpperCase()}`
             ];
             infoHeader.forEach((text, i) => {
-                doc.text(text, pageWidth / 2, y + i * lineSpacing, { align: "center" });
+                doc.text(text, pageWidth / 2, y + i * 4, { align: "center" });
             });
+            y += infoHeader.length * 4 + -2;
 
-            y += infoHeader.length * lineSpacing + 2;
-
-            // Caixa principal
+            // Caixa principal centralizada
             const contentWidth = pageWidth * 0.7;
             const contentX = (pageWidth - contentWidth) / 2;
             const padding = 3;
             const lineHeight = 3.2;
 
+            // Linhas do conteúdo
             const linhas = [];
             const ordemCampos = [
                 "nome", "endereco", "numero", "bairro", "telefone", "produtos",
@@ -248,23 +243,24 @@
                 contentHeight += lineHeight + 1.5;
             }
 
-            const contentY = y; // posição vertical da caixa
+            // Desenhar a borda centralizada
+            const contentY = y;
             doc.setDrawColor(50, 50, 50);
             doc.setLineWidth(0.5);
             doc.rect(contentX, contentY, contentWidth, contentHeight + 2 * padding);
 
-            // Logo no canto superior direito da caixa
+            // Inserir a logo dinamicamente no canto superior direito da caixa
             const logoWidth = 20;
             const logoHeight = 10;
             const logoX = contentX + contentWidth - padding - logoWidth;
             const logoY = contentY + padding;
 
             const img = new Image();
-            img.src = "https://lima-ferreira.github.io/etiqueta-produto/logo.png"; // URL do GitHub Pages
+            img.src = "logo.png"; // caminho relativo da logo
             img.onload = function () {
                 doc.addImage(img, "PNG", logoX, logoY, logoWidth, logoHeight);
 
-                // Texto dentro da caixa, alinhado à esquerda
+                // Inserir texto dentro da caixa, alinhado à esquerda
                 let textY = contentY + padding + 2;
                 for (let { label, value } of linhas) {
                     doc.setFont("helvetica", "bold");
