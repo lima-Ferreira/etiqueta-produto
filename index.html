@@ -165,7 +165,6 @@
             </div>
         </form>
     </main>
-
     <script>
         const form = document.getElementById("etiquetaForm");
 
@@ -179,16 +178,19 @@
         };
 
         function salvarGerarPDF() {
+            const form = document.getElementById("etiquetaForm");
+
             // Validação: não gerar PDF se algum input estiver vazio
             const inputs = Array.from(form.elements).filter(el => el.name);
             for (let input of inputs) {
                 if (!input.value.trim()) {
                     alert(`O campo "${input.name}" está vazio. Preencha todos os campos antes de gerar o PDF.`);
                     input.focus();
-                    return; // interrompe execução
+                    return;
                 }
             }
 
+            // Coletar dados do formulário
             const dados = {};
             for (let el of inputs) {
                 dados[el.name] = el.value;
@@ -199,17 +201,15 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
-            const margin = 10;
             const pageWidth = doc.internal.pageSize.getWidth();
+            let y = 1;
 
-            // Header
-            let y = 3;
+            // Header centralizado
             doc.setFont("helvetica", "bold");
             doc.setFontSize(14);
-            doc.setTextColor(0, 0, 0);
-            doc.text("ETIQUETA DE IDENTIFICAÇÃO", pageWidth / 2, y + 5, { align: "center" });
+            doc.text("ETIQUETA DE IDENTIFICAÇÃO", pageWidth / 2, y + 3, { align: "center" });
 
-            // Selects e Data centralizados abaixo do header
+            // Informações da loja e data
             doc.setFont("helvetica", "normal");
             doc.setFontSize(8);
             y += 8;
@@ -221,17 +221,18 @@
             infoHeader.forEach((text, i) => {
                 doc.text(text, pageWidth / 2, y + i * 4, { align: "center" });
             });
-            y += infoHeader.length * 4 + 2;
+            y += infoHeader.length * 4 + -2;
 
+            // Caixa principal centralizada
+            const contentWidth = pageWidth * 0.7;
+            const contentX = (pageWidth - contentWidth) / 2;
             const padding = 3;
             const lineHeight = 3.2;
-            const contentX = margin;
-            let contentY = y;
-            const contentWidth = pageWidth - 2 * margin - 2 * padding;
 
             // Linhas do conteúdo
             const linhas = [];
-            const ordemCampos = ["nome", "endereco", "numero", "bairro", "telefone", "produtos",
+            const ordemCampos = [
+                "nome", "endereco", "numero", "bairro", "telefone", "produtos",
                 "venda", "nota", "serie", "osdaLoja", "ordemServicos", "defeito"
             ];
             let contentHeight = 0;
@@ -242,41 +243,57 @@
                 contentHeight += lineHeight + 1.5;
             }
 
-            // Borda principal
+            // Desenhar a borda centralizada
+            const contentY = y;
             doc.setDrawColor(50, 50, 50);
             doc.setLineWidth(0.5);
-            doc.rect(contentX, contentY, contentWidth + 2 * padding, contentHeight + 2 * padding);
+            doc.rect(contentX, contentY, contentWidth, contentHeight + 2 * padding);
 
-            // Inserir texto dentro da borda
-            let textY = contentY + padding + 2;
-            for (let { label, value } of linhas) {
+            // Inserir a logo dinamicamente no canto superior direito da caixa
+            const logoWidth = 20;
+            const logoHeight = 10;
+            const logoX = contentX + contentWidth - padding - logoWidth;
+            const logoY = contentY + padding;
+
+            const img = new Image();
+            img.src = "logo.png"; // caminho relativo da logo
+            img.onload = function () {
+                doc.addImage(img, "PNG", logoX, logoY, logoWidth, logoHeight);
+
+                // Inserir texto dentro da caixa, alinhado à esquerda
+                let textY = contentY + padding + 2;
+                for (let { label, value } of linhas) {
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(8);
+                    doc.text(label, contentX + padding, textY);
+
+                    doc.setFont("helvetica", "normal");
+                    doc.setFontSize(8);
+                    const splitText = doc.splitTextToSize(value, contentWidth - doc.getTextWidth(label) - 2 * padding);
+                    doc.text(splitText, contentX + padding + doc.getTextWidth(label), textY);
+
+                    textY += Math.max(splitText.length, 1) * lineHeight + 1.5;
+                }
+
+                // Linha pontilhada com tesoura
+                const corteY = contentY + contentHeight + padding + 5;
+                doc.setLineWidth(0.1);
+                doc.setDrawColor(0, 0, 0);
+                const dashLength = 2;
+                for (let i = contentX; i < contentX + contentWidth; i += dashLength * 2) {
+                    doc.line(i, corteY, i + dashLength, corteY);
+                }
                 doc.setFont("helvetica", "bold");
-                doc.setFontSize(8);
-                doc.text(label, contentX + padding, textY);
+                doc.setFontSize(10);
+                doc.text("✂", contentX + 2, corteY - 1);
 
-                doc.setFont("helvetica", "normal");
-                doc.setFontSize(8);
-                const splitText = doc.splitTextToSize(value, contentWidth - doc.getTextWidth(label));
-                doc.text(splitText, contentX + padding + doc.getTextWidth(label), textY);
-
-                textY += Math.max(splitText.length, 1) * lineHeight + 1.5;
-            }
-
-            // Linha pontilhada com tesoura
-            const corteY = contentY + contentHeight + padding + 5;
-            doc.setLineWidth(0.1);
-            doc.setDrawColor(0, 0, 0);
-            const dashLength = 2;
-            for (let i = contentX; i < contentX + contentWidth + 2 * padding; i += dashLength * 2) {
-                doc.line(i, corteY, i + dashLength, corteY);
-            }
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(10);
-            doc.text("✂", contentX + 2, corteY - 1);
-
-            doc.save("etiqueta.pdf");
-            alert("Dados salvos e PDF gerado!");
+                // Salvar PDF
+                doc.save("etiqueta.pdf");
+                alert("Dados salvos e PDF gerado!");
+            };
         }
+
+
 
         function limparFormulario() {
             localStorage.removeItem("etiqueta");
@@ -285,6 +302,7 @@
             alert("Formulário limpo!");
         }
     </script>
+
 </body>
 
 </html>
